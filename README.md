@@ -2,7 +2,7 @@
 
 > A beautiful, free, open-source Indian harmonium — playable in any browser. No downloads, no accounts, no plugins.
 
-**[▶ Live Demo →](https://yourusername.github.io/web-harmonium)**
+**[▶ Live Demo →](https://moin-shadab.github.io/web-harmonium/)**
 
 ---
 
@@ -110,4 +110,4 @@ If you enjoy Web Harmonium, please **star this repo** — it helps others discov
 
 ---
 
-*Built with ❤️ for Indian classical music lovers everywhere.*
+*Built with ❤️ By Moin Shadab for Indian classical music lovers everywhere.*
