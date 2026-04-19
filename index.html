@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Harmonium — Play Indian Classical Music in Your Browser</title>
+<meta name="description" content="A beautiful, free web-based harmonium. Play Indian classical music in your browser. No downloads needed. Supports keyboard, mouse, MIDI, and touch.">
+<meta property="og:title" content="Web Harmonium">
+<meta property="og:description" content="Free browser-based Indian harmonium with reverb, octave control, transpose, scales and more.">
+<meta name="theme-color" content="#1a0a00">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#100800;
+  --bg2:#1c1000;
+  --bg3:#261500;
+  --wood:#4a2800;
+  --wood2:#5c3300;
+  --wood3:#7a4a10;
+  --gold:#c8922a;
+  --gold2:#e8b84a;
+  --gold3:#f5d080;
+  --ivory:#f5efe0;
+  --ivory2:#fffdf5;
+  --black-key:#1a1008;
+  --text:#e8d8b0;
+  --text2:#c8b888;
+  --text3:#a89060;
+  --red:#c0392b;
+  --green:#27ae60;
+  --blue:#2980b9;
+  --border-gold:rgba(200,146,42,0.3);
+  --shadow:0 4px 20px rgba(0,0,0,0.6);
+}
+html{background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;overflow-x:hidden}
+body{min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#2a1500 0%,#100800 60%)}
+
+/* HEADER */
+header{text-align:center;padding:2rem 1rem 1rem;position:relative}
+.logo{font-size:clamp(2rem,5vw,3.5rem);font-weight:600;letter-spacing:0.05em;color:var(--gold2);line-height:1}
+.logo span{color:var(--gold3);font-style:italic}
+.subtitle{font-size:1rem;color:var(--text3);letter-spacing:0.2em;text-transform:uppercase;margin-top:0.3rem;font-family:'DM Mono',monospace;font-size:0.75rem}
+.header-deco{width:80%;max-width:500px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:1rem auto}
+
+/* MAIN LAYOUT */
+.app{max-width:1200px;margin:0 auto;padding:0 1rem 3rem;display:flex;flex-direction:column;gap:1.5rem}
+
+/* INSTRUMENT BODY */
+.harmonium-body{background:linear-gradient(180deg,var(--wood3) 0%,var(--wood2) 30%,var(--wood) 100%);border-radius:16px;border:2px solid var(--wood3);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,220,100,0.2);padding:1.5rem;position:relative;overflow:hidden}
+.harmonium-body::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='none' stroke='rgba(0,0,0,0.15)' stroke-width='0.5'/%3E%3C/svg%3E");opacity:0.4;pointer-events:none}
+.top-grille{display:flex;justify-content:center;gap:3px;margin-bottom:1rem}
+.grille-pipe{width:6px;height:40px;background:linear-gradient(180deg,var(--gold3),var(--gold));border-radius:3px 3px 0 0;box-shadow:inset 1px 0 2px rgba(255,255,255,0.2)}
+
+/* CONTROLS PANEL */
+.controls-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.control-card{background:rgba(0,0,0,0.35);border:1px solid var(--border-gold);border-radius:10px;padding:0.8rem 1rem}
+.control-label{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;color:var(--text3);text-transform:uppercase;margin-bottom:0.5rem}
+.control-row{display:flex;align-items:center;gap:8px}
+.btn-small{background:var(--wood2);border:1px solid var(--border-gold);color:var(--gold2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:'DM Mono',monospace}
+.btn-small:hover{background:var(--wood3);border-color:var(--gold)}
+.btn-small:active{transform:scale(0.93)}
+.value-display{font-family:'DM Mono',monospace;font-size:1rem;color:var(--gold3);min-width:36px;text-align:center;font-weight:500}
+input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--wood);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold2);border:2px solid var(--gold3);cursor:pointer;transition:transform 0.1s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+select{background:var(--wood2);border:1px solid var(--border-gold);color:var(--gold2);padding:4px 8px;border-radius:6px;font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;outline:none;width:100%}
+select:focus{border-color:var(--gold)}
+
+/* BELLOWS INDICATOR */
+.bellows{display:flex;align-items:center;gap:6px;justify-content:center}
+.bellows-bar{width:8px;height:24px;border-radius:2px;background:var(--wood3);border:1px solid var(--border-gold);transition:all 0.1s;transform-origin:bottom}
+.bellows-bar.active{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+
+/* KEYBOARD */
+.keyboard-wrapper{position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.keyboard-scroll{display:flex;justify-content:center;padding:0.5rem 0 1rem}
+.keyboard{position:relative;display:flex;user-select:none;touch-action:none}
+.white-keys{display:flex;gap:2px}
+.key-white{
+  width:44px;height:160px;
+  background:linear-gradient(180deg,var(--ivory2) 0%,var(--ivory) 70%,#e0d8c0 100%);
+  border:1px solid #bbb;border-radius:0 0 6px 6px;
+  cursor:pointer;position:relative;box-shadow:2px 4px 6px rgba(0,0,0,0.4),inset 1px 0 0 rgba(255,255,255,0.5);
+  transition:background 0.05s,transform 0.05s;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:8px;
+}
+.key-white:hover{background:linear-gradient(180deg,#fffef8 0%,#f8f4e8 70%,#e8e0c8 100%)}
+.key-white.pressed,.key-white.active{
+  background:linear-gradient(180deg,#e8d090 0%,#d0b870 70%,#c0a860 100%);
+  transform:translateY(2px);
+  box-shadow:1px 2px 3px rgba(0,0,0,0.4),inset 1px 0 0 rgba(255,255,255,0.3);
+}
+.key-white.highlight{background:linear-gradient(180deg,#d0f0e0 0%,#b0dfc0 70%,#90cfa0 100%)}
+.key-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:#888;text-align:center;line-height:1.2}
+.key-hotkey{font-size:0.55rem;color:#aaa;font-family:'DM Mono',monospace}
+
+.black-keys{position:absolute;top:0;left:0;display:flex;pointer-events:none}
+.key-black-spacer{display:inline-block}
+.key-black{
+  width:28px;height:100px;
+  background:linear-gradient(180deg,#3a2a18 0%,var(--black-key) 60%,#000 100%);
+  border:1px solid #111;border-radius:0 0 5px 5px;
+  cursor:pointer;position:absolute;top:0;z-index:2;pointer-events:all;
+  box-shadow:2px 4px 6px rgba(0,0,0,0.8),inset 1px 0 0 rgba(255,255,255,0.1);
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px;
+  transition:background 0.05s,transform 0.05s;
+}
+.key-black:hover{background:linear-gradient(180deg,#4a3a28 0%,#222 60%,#111 100%)}
+.key-black.pressed,.key-black.active{
+  background:linear-gradient(180deg,#c8922a 0%,#8a6010 60%,#5a4008 100%);
+  transform:translateY(2px);
+  box-shadow:1px 2px 3px rgba(0,0,0,0.6);
+}
+.key-black .key-label{color:#888;font-size:0.5rem}
+.key-black .key-hotkey{font-size:0.48rem;color:#666}
+
+/* BOTTOM INFO BAR */
+.info-bar{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem}
+.info-chip{background:rgba(0,0,0,0.4);border:1px solid var(--border-gold);border-radius:20px;padding:4px 12px;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--text3);display:flex;align-items:center;gap:6px}
+.info-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.info-chip .dot.off{background:var(--text3)}
+
+/* SCALE PANEL */
+.scale-panel{background:rgba(0,0,0,0.3);border:1px solid var(--border-gold);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.scale-btns{display:flex;gap:6px;flex-wrap:wrap}
+.scale-btn{background:var(--wood2);border:1px solid var(--border-gold);color:var(--text2);padding:4px 12px;border-radius:20px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.7rem;transition:all 0.15s}
+.scale-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.scale-btn.active{background:var(--gold);color:var(--bg);border-color:var(--gold2);font-weight:500}
+
+/* RECORDED NOTES */
+.recorder-panel{background:rgba(0,0,0,0.3);border:1px solid var(--border-gold);border-radius:10px;padding:1rem}
+.recorder-top{display:flex;align-items:center;gap:10px;margin-bottom:0.8rem;flex-wrap:wrap}
+.rec-btn{padding:6px 16px;border-radius:20px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.75rem;border:1px solid;transition:all 0.15s}
+.rec-btn.record{background:transparent;border-color:var(--red);color:var(--red)}
+.rec-btn.record.recording{background:var(--red);color:#fff;animation:pulse 1s infinite}
+.rec-btn.play{background:transparent;border-color:var(--green);color:var(--green)}
+.rec-btn.play:disabled{opacity:0.4;cursor:not-allowed}
+.rec-btn.stop{background:transparent;border-color:var(--text3);color:var(--text3)}
+.rec-btn.clear{background:transparent;border-color:var(--text3);color:var(--text3)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.note-roll{display:flex;gap:3px;flex-wrap:wrap;min-height:28px;align-items:center}
+.note-pill{background:var(--gold);color:var(--bg);padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;font-size:0.65rem;font-weight:500}
+
+/* WAVEFORM */
+.waveform-canvas{width:100%;height:60px;border-radius:8px;background:rgba(0,0,0,0.3);border:1px solid var(--border-gold)}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border-gold);margin-bottom:1rem}
+.tab{padding:6px 16px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);border-bottom:2px solid transparent;transition:all 0.15s;letter-spacing:0.1em;text-transform:uppercase}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--gold2);border-color:var(--gold2)}
+
+/* KEYBOARD HELP */
+.help-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.5rem}
+.help-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(200,146,42,0.1)}
+.help-key{background:var(--wood2);border:1px solid var(--border-gold);border-radius:4px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--gold3);min-width:28px;text-align:center}
+.help-note{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text2)}
+
+/* DRONE */
+.drone-section{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.drone-btn{padding:5px 14px;border-radius:20px;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.7rem;border:1px solid var(--border-gold);color:var(--text2);background:var(--wood2);transition:all 0.15s}
+.drone-btn.active{background:var(--gold);color:var(--bg);border-color:var(--gold2)}
+
+/* MIDI STATUS */
+.midi-status{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3)}
+.midi-dot{width:8px;height:8px;border-radius:50%;background:var(--text3)}
+.midi-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* FOOTER */
+footer{text-align:center;padding:2rem;color:var(--text3);font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em}
+footer a{color:var(--gold);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .key-white{width:34px;height:130px}
+  .key-black{width:22px;height:80px}
+  .controls-panel{grid-template-columns:1fr 1fr}
+}
+
+/* ORNAMENT */
+.ornament{text-align:center;font-size:1.2rem;color:var(--gold);letter-spacing:0.3em;margin:0.3rem 0}
+
+/* ACTIVE NOTE DISPLAY */
+.active-note-display{text-align:center;font-size:clamp(2rem,6vw,3rem);font-weight:600;color:var(--gold3);min-height:3.5rem;letter-spacing:0.1em;font-family:'Cormorant Garamond',serif;transition:opacity 0.3s}
+.active-note-sub{text-align:center;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);letter-spacing:0.15em;min-height:1.2rem}
+
+/* TOOLTIP */
+[title]{cursor:help}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Web <span>Harmonium</span></div>
+  <div class="subtitle">Indian Classical Instrument · Browser Native · Free Forever</div>
+  <div class="header-deco"></div>
+  <div class="ornament">❧ ✦ ❧</div>
+</header>
+
+<div class="app">
+
+  <!-- ACTIVE NOTE -->
+  <div class="active-note-display" id="noteDisplay">—</div>
+  <div class="active-note-sub" id="noteSubDisplay">Press a key or click the keyboard</div>
+
+  <!-- MAIN INSTRUMENT -->
+  <div class="harmonium-body">
+
+    <!-- TOP GRILLE -->
+    <div class="top-grille" id="topGrille"></div>
+
+    <!-- CONTROLS -->
+    <div class="controls-panel">
+
+      <div class="control-card">
+        <div class="control-label">Volume</div>
+        <div class="control-row">
+          <input type="range" id="volumeSlider" min="0" max="100" value="80" title="Master volume">
+          <span class="value-display" id="volumeVal">80</span>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-label">Reverb</div>
+        <div class="control-row">
+          <input type="range" id="reverbSlider" min="0" max="100" value="20" title="Reverb wet amount">
+          <span class="value-display" id="reverbVal">20</span>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-label">Octave</div>
+        <div class="control-row">
+          <button class="btn-small" id="octDown" title="Lower octave">−</button>
+          <span class="value-display" id="octaveVal">4</span>
+          <button class="btn-small" id="octUp" title="Raise octave">+</button>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-label">Transpose</div>
+        <div class="control-row">
+          <button class="btn-small" id="transpDown" title="Transpose down">−</button>
+          <span class="value-display" id="transpVal">0</span>
+          <button class="btn-small" id="transpUp" title="Transpose up">+</button>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-label">Extra Reeds</div>
+        <div class="control-row">
+          <button class="btn-small" id="reedDown">−</button>
+          <span class="value-display" id="reedVal">0</span>
+          <button class="btn-small" id="reedUp">+</button>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--text3);margin-top:4px">Adds octave-doubled voice</div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-label">Timbre</div>
+        <select id="timbreSelect">
+          <option value="harmonium">Harmonium</option>
+          <option value="reed">Pure Reed</option>
+          <option value="flute">Flute-like</option>
+          <option value="sarangi">Sarangi</option>
+        </select>
+        <div style="margin-top:6px">
+          <select id="scaleSelect" title="Highlight scale on keyboard">
+            <option value="none">No Scale</option>
+            <option value="bilawal">Bilawal (Major)</option>
+            <option value="bhairavi">Bhairavi</option>
+            <option value="yaman">Yaman (Kalyan)</option>
+            <option value="bhairav">Bhairav</option>
+            <option value="kafi">Kafi</option>
+            <option value="asavari">Asavari</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WAVEFORM -->
+    <canvas class="waveform-canvas" id="waveCanvas"></canvas>
+
+    <!-- KEYBOARD -->
+    <div class="keyboard-wrapper" style="margin-top:1rem">
+      <div class="keyboard-scroll">
+        <div class="keyboard" id="keyboard"></div>
+      </div>
+    </div>
+
+    <!-- BELLOWS / INFO -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem;flex-wrap:wrap;gap:0.5rem">
+      <div class="bellows" id="bellows">
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--text3);margin-right:4px">BELLOWS</span>
+      </div>
+      <div class="info-bar">
+        <div class="info-chip"><span class="dot" id="audioIndicator"></span>Audio Ready</div>
+        <div class="info-chip"><span class="dot off" id="midiIndicator"></span>MIDI</div>
+        <div class="info-chip" id="polyCount">Poly: 0</div>
+      </div>
+    </div>
+
+  </div><!-- end harmonium-body -->
+
+  <!-- BOTTOM PANELS (TABS) -->
+  <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border-gold);border-radius:10px;padding:1rem">
+    <div class="tabs">
+      <div class="tab active" data-tab="recorder">Recorder</div>
+      <div class="tab" data-tab="drone">Drone</div>
+      <div class="tab" data-tab="help">Keyboard Map</div>
+      <div class="tab" data-tab="about">About</div>
+    </div>
+
+    <!-- RECORDER -->
+    <div id="tab-recorder">
+      <div class="recorder-top">
+        <button class="rec-btn record" id="recBtn">⏺ Record</button>
+        <button class="rec-btn play" id="playBtn" disabled>▶ Play</button>
+        <button class="rec-btn stop" id="stopBtn">⏹ Stop</button>
+        <button class="rec-btn clear" id="clearBtn">✕ Clear</button>
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3)" id="recStatus">Ready</span>
+      </div>
+      <div class="note-roll" id="noteRoll">
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3)">No recording yet. Hit Record and play.</span>
+      </div>
+    </div>
+
+    <!-- DRONE -->
+    <div id="tab-drone" style="display:none">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);margin-bottom:0.8rem">Select a root note for a continuous drone (Sa). Adjust volume with the master slider.</div>
+      <div class="drone-section">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="drone-btn active" data-note="C" id="droneC">Sa (C)</button>
+          <button class="drone-btn" data-note="C#">Sa (C#)</button>
+          <button class="drone-btn" data-note="D">Sa (D)</button>
+          <button class="drone-btn" data-note="D#">Sa (D#)</button>
+          <button class="drone-btn" data-note="E">Sa (E)</button>
+          <button class="drone-btn" data-note="F">Sa (F)</button>
+          <button class="drone-btn" data-note="F#">Sa (F#)</button>
+          <button class="drone-btn" data-note="G">Sa (G)</button>
+          <button class="drone-btn" data-note="G#">Sa (G#)</button>
+          <button class="drone-btn" data-note="A">Sa (A)</button>
+          <button class="drone-btn" data-note="A#">Sa (A#)</button>
+          <button class="drone-btn" data-note="B">Sa (B)</button>
+        </div>
+        <button class="rec-btn play" id="droneToggle">▶ Start Drone</button>
+      </div>
+      <div style="margin-top:1rem">
+        <div class="control-label">Drone Volume</div>
+        <div class="control-row">
+          <input type="range" id="droneVolumeSlider" min="0" max="100" value="40">
+          <span class="value-display" id="droneVolumeVal">40</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div id="tab-help" style="display:none">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text3);margin-bottom:0.8rem">
+        Computer keyboard mapping (current octave). Use <strong style="color:var(--gold2)">Z/X</strong> to change octave, <strong style="color:var(--gold2)">C/V</strong> to transpose.
+      </div>
+      <div class="help-grid" id="helpGrid"></div>
+    </div>
+
+    <!-- ABOUT -->
+    <div id="tab-about" style="display:none">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;line-height:1.8;color:var(--text2);max-width:600px">
+        <p>Web Harmonium is a free, open-source browser instrument inspired by the Indian harmonium — a staple of Hindustani and Carnatic classical music, bhajans, and ghazals.</p>
+        <br>
+        <p>Built with the Web Audio API. No plugins, no downloads, no accounts. Works on desktop and mobile. MIDI-compatible if your browser supports WebMIDI.</p>
+        <br>
+        <p style="color:var(--text3);font-size:0.9rem">Features: Harmonium-style reed synthesis · Reverb · Multiple octaves · Transpose · Scale highlighting · Drone · Recorder · MIDI input · Keyboard shortcuts · Touch support</p>
+        <br>
+        <p style="font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text3)">
+          Star this project on <a href="https://github.com" target="_blank" rel="noopener" style="color:var(--gold)">GitHub</a> to support development.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="ornament" style="margin-top:1rem">✦</div>
+<footer>
+  Web Harmonium · Open Source · Free Forever<br>
+  Built with Web Audio API · <a href="https://github.com" target="_blank">GitHub</a>
+</footer>
+
+<script>
+// ─── AUDIO ENGINE ──────────────────────────────────────────────────────────────
+let audioCtx = null;
+let masterGain, reverbGain, dryGain, convolver, analyser;
+let activeNotes = {};
+let droneOscillators = [];
+let droneActive = false;
+let droneNote = 'C';
+let droneVolume = 0.4;
+
+// Settings
+let currentOctave = 4;
+let transpose = 0;
+let extraReeds = 0;
+let volume = 0.8;
+let reverbWet = 0.2;
+let timbre = 'harmonium';
+
+// Recording
+let recording = false;
+let playing = false;
+let recordedNotes = [];
+let recordStart = 0;
+let playbackTimeout = null;
+
+// Scales (semitone offsets from root)
+const SCALES = {
+  none: [],
+  bilawal: [0,2,4,5,7,9,11],
+  bhairavi: [0,1,3,5,7,8,10],
+  yaman: [0,2,4,6,7,9,11],
+  bhairav: [0,1,4,5,7,8,11],
+  kafi: [0,2,3,5,7,9,10],
+  asavari: [0,2,3,5,7,8,10],
+};
+let activeScale = 'none';
+
+// Note names
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const SARGAM = ['Sa','ra','Re','ga','Ga','Ma','Ma+','Pa','dha','Dha','ni','Ni'];
+
+// Keyboard mapping — white + black keys, 2 octaves
+const KEY_MAP = [
+  {key:'a',note:'C',black:false},{key:'w',note:'C#',black:true},
+  {key:'s',note:'D',black:false},{key:'e',note:'D#',black:true},
+  {key:'d',note:'E',black:false},
+  {key:'f',note:'F',black:false},{key:'t',note:'F#',black:true},
+  {key:'g',note:'G',black:false},{key:'y',note:'G#',black:true},
+  {key:'h',note:'A',black:false},{key:'u',note:'A#',black:true},
+  {key:'j',note:'B',black:false},
+  // Upper octave
+  {key:'k',note:'C',black:false,oct:1},{key:'o',note:'C#',black:true,oct:1},
+  {key:'l',note:'D',black:false,oct:1},{key:'p',note:'D#',black:true,oct:1},
+  {key:';',note:'E',black:false,oct:1},
+  {key:"'",note:'F',black:false,oct:1},
+];
+
+// Init audio context on first interaction
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = volume;
+
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+
+  // Reverb chain
+  convolver = audioCtx.createConvolver();
+  convolver.buffer = makeImpulse(audioCtx, 1.5, 2);
+
+  reverbGain = audioCtx.createGain();
+  reverbGain.gain.value = reverbWet;
+
+  dryGain = audioCtx.createGain();
+  dryGain.gain.value = 1 - reverbWet;
+
+  masterGain.connect(dryGain);
+  masterGain.connect(convolver);
+  convolver.connect(reverbGain);
+  dryGain.connect(analyser);
+  reverbGain.connect(analyser);
+  analyser.connect(audioCtx.destination);
+
+  document.getElementById('audioIndicator').classList.remove('off');
+  startWaveform();
+}
+
+function makeImpulse(ctx, duration, decay) {
+  const sr = ctx.sampleRate;
+  const len = sr * duration;
+  const buf = ctx.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+  }
+  return buf;
+}
+
+// Harmonium-style synthesis
+function noteToFreq(note, oct) {
+  const idx = NOTE_NAMES.indexOf(note);
+  const midi = (oct + 1) * 12 + idx + transpose;
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function createHarmoniumVoice(freq, timbre) {
+  const now = audioCtx.currentTime;
+  const nodes = [];
+
+  function addOsc(f, type, gain, detune = 0) {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = f;
+    osc.detune.value = detune;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(gain, now + 0.04);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    nodes.push({osc, gain: g});
+  }
+
+  if (timbre === 'harmonium') {
+    addOsc(freq, 'sawtooth', 0.18);
+    addOsc(freq * 2, 'sawtooth', 0.08);
+    addOsc(freq, 'square', 0.04, 3);
+    addOsc(freq * 3, 'sine', 0.02);
+  } else if (timbre === 'reed') {
+    addOsc(freq, 'sawtooth', 0.2);
+    addOsc(freq * 2, 'sine', 0.06);
+    addOsc(freq / 2, 'sine', 0.04);
+  } else if (timbre === 'flute') {
+    addOsc(freq, 'sine', 0.18);
+    addOsc(freq * 2, 'sine', 0.05);
+    addOsc(freq * 3, 'sine', 0.02);
+  } else if (timbre === 'sarangi') {
+    addOsc(freq, 'sawtooth', 0.15);
+    addOsc(freq * 1.5, 'sawtooth', 0.06);
+    addOsc(freq * 2, 'sine', 0.04, -5);
+  }
+
+  if (extraReeds > 0) {
+    addOsc(freq * 2, 'sawtooth', 0.06);
+  }
+
+  return nodes;
+}
+
+function startNote(note, oct) {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const key = note + oct;
+  if (activeNotes[key]) return;
+  const freq = noteToFreq(note, oct);
+  const nodes = createHarmoniumVoice(freq, timbre);
+  activeNotes[key] = nodes;
+  updatePolyCount();
+  updateBellows();
+
+  // Display
+  const ni = NOTE_NAMES.indexOf(note);
+  document.getElementById('noteDisplay').textContent = note + oct + '  ' + SARGAM[ni];
+  document.getElementById('noteSubDisplay').textContent = freq.toFixed(1) + ' Hz';
+
+  if (recording) {
+    recordedNotes.push({ type: 'on', note, oct, time: Date.now() - recordStart });
+  }
+}
+
+function stopNote(note, oct) {
+  const key = note + oct;
+  const nodes = activeNotes[key];
+  if (!nodes) return;
+  const now = audioCtx.currentTime;
+  nodes.forEach(({ osc, gain }) => {
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.stop(now + 0.26);
+  });
+  delete activeNotes[key];
+  updatePolyCount();
+  updateBellows();
+
+  if (recording) {
+    recordedNotes.push({ type: 'off', note, oct, time: Date.now() - recordStart });
+  }
+
+  // Clear display if no notes
+  if (Object.keys(activeNotes).length === 0) {
+    setTimeout(() => {
+      if (Object.keys(activeNotes).length === 0) {
+        document.getElementById('noteDisplay').textContent = '—';
+        document.getElementById('noteSubDisplay').textContent = 'Press a key or click the keyboard';
+      }
+    }, 300);
+  }
+}
+
+function updatePolyCount() {
+  document.getElementById('polyCount').textContent = 'Poly: ' + Object.keys(activeNotes).length;
+}
+
+// ─── WAVEFORM ──────────────────────────────────────────────────────────────────
+function startWaveform() {
+  const canvas = document.getElementById('waveCanvas');
+  const ctx2 = canvas.getContext('2d');
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  function draw() {
+    requestAnimationFrame(draw);
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    analyser.getByteTimeDomainData(data);
+    ctx2.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2.strokeStyle = '#c8922a';
+    ctx2.lineWidth = 1.5;
+    ctx2.beginPath();
+    const sliceW = canvas.width / data.length;
+    let x = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = data[i] / 128.0;
+      const y = (v * canvas.height) / 2;
+      i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+      x += sliceW;
+    }
+    ctx2.stroke();
+  }
+  draw();
+}
+
+// ─── KEYBOARD UI ───────────────────────────────────────────────────────────────
+// Build 2 full octaves starting at octave 3
+const WHITE_NOTES = ['C','D','E','F','G','A','B'];
+const BLACK_POSITIONS = { 'C#':0, 'D#':1, 'F#':3, 'G#':4, 'A#':5 };
+const BLACK_OFFSET = [0.65, 1.65, 3.65, 4.65, 5.65]; // relative to white key index
+
+function buildKeyboard() {
+  const kb = document.getElementById('keyboard');
+  kb.innerHTML = '';
+  const octaves = [3, 4, 5];
+  const whiteContainer = document.createElement('div');
+  whiteContainer.className = 'white-keys';
+  const blackContainer = document.createElement('div');
+  blackContainer.className = 'black-keys';
+  blackContainer.style.position = 'absolute';
+  blackContainer.style.top = '0';
+  blackContainer.style.left = '0';
+  blackContainer.style.width = '100%';
+
+  const keyW = window.innerWidth < 600 ? 34 : 44;
+  const keyGap = 2;
+
+  let whiteIdx = 0;
+
+  octaves.forEach(oct => {
+    WHITE_NOTES.forEach((note, i) => {
+      const el = document.createElement('div');
+      el.className = 'key-white';
+      el.dataset.note = note;
+      el.dataset.oct = oct;
+
+      const km = KEY_MAP.find(k => k.note === note && !k.black && (k.oct === undefined ? oct === currentOctave : (oct === currentOctave + 1 && k.oct === 1)));
+      const label = document.createElement('div');
+      label.className = 'key-label';
+      label.textContent = note;
+      const hotkey = document.createElement('div');
+      hotkey.className = 'key-hotkey';
+      hotkey.textContent = km ? km.key.toUpperCase() : '';
+      el.appendChild(label);
+      el.appendChild(hotkey);
+
+      // Touch / mouse
+      el.addEventListener('pointerdown', e => { e.preventDefault(); startNote(note, oct); el.classList.add('pressed'); });
+      el.addEventListener('pointerup', e => { stopNote(note, oct); el.classList.remove('pressed'); });
+      el.addEventListener('pointerleave', e => { if (e.buttons) { stopNote(note, oct); el.classList.remove('pressed'); } });
+
+      whiteContainer.appendChild(el);
+      whiteIdx++;
+    });
+
+    // Black keys for this octave
+    const blackNotes = ['C#','D#','F#','G#','A#'];
+    const blackWhiteIndices = [0, 1, 3, 4, 5]; // after which white key
+    blackNotes.forEach((note, bi) => {
+      const el = document.createElement('div');
+      el.className = 'key-black';
+      el.dataset.note = note;
+      el.dataset.oct = oct;
+
+      const octStart = (oct - 3) * 7;
+      const leftPos = (octStart + blackWhiteIndices[bi]) * (keyW + keyGap) + keyW * 0.6;
+      el.style.left = leftPos + 'px';
+      el.style.width = (keyW * 0.62) + 'px';
+
+      const km = KEY_MAP.find(k => k.note === note && k.black && (k.oct === undefined ? oct === currentOctave : (oct === currentOctave + 1 && k.oct === 1)));
+      const label = document.createElement('div');
+      label.className = 'key-label';
+      label.textContent = note;
+      const hotkey = document.createElement('div');
+      hotkey.className = 'key-hotkey';
+      hotkey.textContent = km ? km.key.toUpperCase() : '';
+      el.appendChild(label);
+      el.appendChild(hotkey);
+
+      el.addEventListener('pointerdown', e => { e.preventDefault(); startNote(note, oct); el.classList.add('pressed'); });
+      el.addEventListener('pointerup', e => { stopNote(note, oct); el.classList.remove('pressed'); });
+      el.addEventListener('pointerleave', e => { if (e.buttons) { stopNote(note, oct); el.classList.remove('pressed'); } });
+
+      blackContainer.appendChild(el);
+    });
+  });
+
+  // Set keyboard width
+  const totalWhite = 3 * 7;
+  const kbWidth = totalWhite * (keyW + keyGap);
+  kb.style.width = kbWidth + 'px';
+  kb.style.position = 'relative';
+
+  kb.appendChild(whiteContainer);
+  kb.appendChild(blackContainer);
+
+  highlightScale();
+  updateHotkeyLabels();
+}
+
+function highlightScale() {
+  const scale = SCALES[activeScale];
+  document.querySelectorAll('.key-white, .key-black').forEach(el => {
+    el.classList.remove('highlight');
+    if (scale.length === 0) return;
+    const note = el.dataset.note;
+    const ni = NOTE_NAMES.indexOf(note);
+    if (scale.includes(ni % 12)) el.classList.add('highlight');
+  });
+}
+
+function updateHotkeyLabels() {
+  document.querySelectorAll('.key-white, .key-black').forEach(el => {
+    const note = el.dataset.note;
+    const oct = parseInt(el.dataset.oct);
+    const isBlack = el.classList.contains('key-black');
+    const km = KEY_MAP.find(k => k.note === note && !!k.black === isBlack &&
+      (k.oct === undefined ? oct === currentOctave : (oct === currentOctave + 1 && k.oct === 1)));
+    const hk = el.querySelector('.key-hotkey');
+    if (hk) hk.textContent = km ? km.key.toUpperCase() : '';
+  });
+}
+
+// ─── BELLOWS ANIMATION ─────────────────────────────────────────────────────────
+function buildBellows() {
+  const b = document.getElementById('bellows');
+  for (let i = 0; i < 8; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'bellows-bar';
+    b.appendChild(bar);
+  }
+}
+
+let bellowsFrame = 0;
+function updateBellows() {
+  const bars = document.querySelectorAll('.bellows-bar');
+  const isPlaying = Object.keys(activeNotes).length > 0 || droneActive;
+  bars.forEach((bar, i) => {
+    bar.classList.toggle('active', isPlaying);
+    if (isPlaying) {
+      bar.style.transform = `scaleY(${0.5 + 0.5 * Math.sin(Date.now() / 120 + i * 0.7)})`;
+    }
+  });
+  if (isPlaying) requestAnimationFrame(updateBellows);
+}
+
+// ─── GRILLE ────────────────────────────────────────────────────────────────────
+function buildGrille() {
+  const g = document.getElementById('topGrille');
+  for (let i = 0; i < 32; i++) {
+    const pipe = document.createElement('div');
+    pipe.className = 'grille-pipe';
+    pipe.style.height = (30 + Math.sin(i * 0.7) * 10) + 'px';
+    g.appendChild(pipe);
+  }
+}
+
+// ─── KEYBOARD INPUT ────────────────────────────────────────────────────────────
+const pressedKeys = new Set();
+
+document.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+
+  if (e.key === 'z') { changeOctave(-1); return; }
+  if (e.key === 'x') { changeOctave(1); return; }
+  if (e.key === 'c') { changeTranspose(-1); return; }
+  if (e.key === 'v') { changeTranspose(1); return; }
+
+  const km = KEY_MAP.find(k => k.key === e.key.toLowerCase());
+  if (km) {
+    initAudio();
+    const oct = currentOctave + (km.oct || 0);
+    pressedKeys.add(e.key.toLowerCase());
+    startNote(km.note, oct);
+    // Visual feedback
+    document.querySelectorAll(`[data-note="${km.note}"][data-oct="${oct}"]`).forEach(el => el.classList.add('active'));
+  }
+});
+
+document.addEventListener('keyup', e => {
+  const km = KEY_MAP.find(k => k.key === e.key.toLowerCase());
+  if (km) {
+    const oct = currentOctave + (km.oct || 0);
+    pressedKeys.delete(e.key.toLowerCase());
+    stopNote(km.note, oct);
+    document.querySelectorAll(`[data-note="${km.note}"][data-oct="${oct}"]`).forEach(el => el.classList.remove('active'));
+  }
+});
+
+// ─── CONTROLS ─────────────────────────────────────────────────────────────────
+function changeOctave(delta) {
+  currentOctave = Math.max(2, Math.min(6, currentOctave + delta));
+  document.getElementById('octaveVal').textContent = currentOctave;
+  buildKeyboard();
+}
+
+function changeTranspose(delta) {
+  transpose = Math.max(-6, Math.min(6, transpose + delta));
+  document.getElementById('transpVal').textContent = transpose > 0 ? '+' + transpose : transpose;
+}
+
+document.getElementById('octDown').addEventListener('click', () => changeOctave(-1));
+document.getElementById('octUp').addEventListener('click', () => changeOctave(1));
+document.getElementById('transpDown').addEventListener('click', () => changeTranspose(-1));
+document.getElementById('transpUp').addEventListener('click', () => changeTranspose(1));
+
+document.getElementById('reedDown').addEventListener('click', () => {
+  extraReeds = Math.max(0, extraReeds - 1);
+  document.getElementById('reedVal').textContent = extraReeds;
+});
+document.getElementById('reedUp').addEventListener('click', () => {
+  extraReeds = Math.min(3, extraReeds + 1);
+  document.getElementById('reedVal').textContent = extraReeds;
+});
+
+document.getElementById('volumeSlider').addEventListener('input', e => {
+  volume = e.target.value / 100;
+  document.getElementById('volumeVal').textContent = e.target.value;
+  if (masterGain) masterGain.gain.value = volume;
+});
+
+document.getElementById('reverbSlider').addEventListener('input', e => {
+  reverbWet = e.target.value / 100;
+  document.getElementById('reverbVal').textContent = e.target.value;
+  if (reverbGain) {
+    reverbGain.gain.value = reverbWet;
+    dryGain.gain.value = 1 - reverbWet;
+  }
+});
+
+document.getElementById('timbreSelect').addEventListener('change', e => {
+  timbre = e.target.value;
+});
+
+document.getElementById('scaleSelect').addEventListener('change', e => {
+  activeScale = e.target.value;
+  highlightScale();
+});
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    ['recorder','drone','help','about'].forEach(id => {
+      document.getElementById('tab-' + id).style.display = 'none';
+    });
+    document.getElementById('tab-' + tab.dataset.tab).style.display = '';
+  });
+});
+
+// ─── RECORDER ─────────────────────────────────────────────────────────────────
+document.getElementById('recBtn').addEventListener('click', () => {
+  if (!recording) {
+    initAudio();
+    recordedNotes = [];
+    recordStart = Date.now();
+    recording = true;
+    document.getElementById('recBtn').classList.add('recording');
+    document.getElementById('recBtn').textContent = '⏹ Stop Rec';
+    document.getElementById('recStatus').textContent = 'Recording...';
+    document.getElementById('noteRoll').innerHTML = '';
+    document.getElementById('playBtn').disabled = true;
+  } else {
+    recording = false;
+    document.getElementById('recBtn').classList.remove('recording');
+    document.getElementById('recBtn').textContent = '⏺ Record';
+    document.getElementById('recStatus').textContent = recordedNotes.length + ' events';
+    document.getElementById('playBtn').disabled = recordedNotes.length === 0;
+    renderNoteRoll();
+  }
+});
+
+function renderNoteRoll() {
+  const roll = document.getElementById('noteRoll');
+  roll.innerHTML = '';
+  const onEvents = recordedNotes.filter(e => e.type === 'on');
+  if (!onEvents.length) { roll.textContent = 'No notes recorded.'; return; }
+  onEvents.forEach(e => {
+    const pill = document.createElement('span');
+    pill.className = 'note-pill';
+    pill.textContent = e.note + e.oct;
+    roll.appendChild(pill);
+  });
+}
+
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (playing) return;
+  playing = true;
+  document.getElementById('recStatus').textContent = 'Playing...';
+  recordedNotes.forEach(evt => {
+    const t = setTimeout(() => {
+      if (evt.type === 'on') startNote(evt.note, evt.oct);
+      else stopNote(evt.note, evt.oct);
+    }, evt.time);
+  });
+  const lastTime = recordedNotes.length ? recordedNotes[recordedNotes.length - 1].time : 0;
+  playbackTimeout = setTimeout(() => {
+    playing = false;
+    document.getElementById('recStatus').textContent = 'Done';
+  }, lastTime + 500);
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+  clearTimeout(playbackTimeout);
+  playing = false;
+  recording = false;
+  document.getElementById('recBtn').classList.remove('recording');
+  document.getElementById('recBtn').textContent = '⏺ Record';
+  document.getElementById('recStatus').textContent = 'Stopped';
+  Object.keys(activeNotes).forEach(key => {
+    const note = key.slice(0, -1);
+    const oct = parseInt(key.slice(-1));
+    stopNote(note, oct);
+  });
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  recordedNotes = [];
+  document.getElementById('noteRoll').innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:0.7rem;color:var(--text3)">No recording yet. Hit Record and play.</span>';
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('recStatus').textContent = 'Ready';
+});
+
+// ─── DRONE ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.drone-btn[data-note]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.drone-btn[data-note]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    droneNote = btn.dataset.note;
+    if (droneActive) {
+      stopDrone(); startDrone();
+    }
+  });
+});
+
+document.getElementById('droneToggle').addEventListener('click', () => {
+  if (!droneActive) { initAudio(); startDrone(); document.getElementById('droneToggle').textContent = '⏹ Stop Drone'; }
+  else { stopDrone(); document.getElementById('droneToggle').textContent = '▶ Start Drone'; }
+});
+
+document.getElementById('droneVolumeSlider').addEventListener('input', e => {
+  droneVolume = e.target.value / 100;
+  document.getElementById('droneVolumeVal').textContent = e.target.value;
+  droneOscillators.forEach(({gain}) => { if(gain) gain.gain.value = droneVolume * 0.15; });
+});
+
+function startDrone() {
+  droneActive = true;
+  const freq = noteToFreq(droneNote, 3);
+  const harmonics = [1, 2, 3, 4];
+  const gains = [0.4, 0.2, 0.08, 0.04];
+  const droneGain = audioCtx.createGain();
+  droneGain.gain.value = droneVolume;
+  droneGain.connect(masterGain);
+
+  harmonics.forEach((h, i) => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = h === 1 ? 'sawtooth' : 'sine';
+    osc.frequency.value = freq * h;
+    g.gain.value = gains[i] * 0.3;
+    osc.connect(g);
+    g.connect(droneGain);
+    osc.start();
+    droneOscillators.push({ osc, gain: g });
+  });
+  updateBellows();
+}
+
+function stopDrone() {
+  droneActive = false;
+  const now = audioCtx.currentTime;
+  droneOscillators.forEach(({ osc, gain }) => {
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.stop(now + 0.31);
+  });
+  droneOscillators = [];
+  updateBellows();
+}
+
+// ─── HELP GRID ────────────────────────────────────────────────────────────────
+function buildHelp() {
+  const grid = document.getElementById('helpGrid');
+  grid.innerHTML = '';
+  KEY_MAP.forEach(km => {
+    const row = document.createElement('div');
+    row.className = 'help-row';
+    row.innerHTML = `<span class="help-key">${km.key.toUpperCase()}</span>
+      <span class="help-note">${km.note}${currentOctave + (km.oct||0)} — ${SARGAM[NOTE_NAMES.indexOf(km.note)]}</span>`;
+    grid.appendChild(row);
+  });
+  // Special keys
+  [['Z','Octave Down'],['X','Octave Up'],['C','Transpose −'],['V','Transpose +']].forEach(([k,d]) => {
+    const row = document.createElement('div');
+    row.className = 'help-row';
+    row.style.borderColor = 'rgba(200,146,42,0.2)';
+    row.innerHTML = `<span class="help-key" style="background:var(--bg3)">${k}</span>
+      <span class="help-note" style="color:var(--text3)">${d}</span>`;
+    grid.appendChild(row);
+  });
+}
+
+// ─── MIDI ─────────────────────────────────────────────────────────────────────
+function initMIDI() {
+  if (!navigator.requestMIDIAccess) return;
+  navigator.requestMIDIAccess().then(access => {
+    document.getElementById('midiIndicator').classList.add('on');
+    access.inputs.forEach(input => {
+      input.onmidimessage = handleMIDI;
+    });
+    access.onstatechange = () => {
+      access.inputs.forEach(input => { input.onmidimessage = handleMIDI; });
+    };
+  });
+}
+
+function handleMIDI(msg) {
+  const [status, note, vel] = msg.data;
+  const cmd = status & 0xf0;
+  if (cmd !== 0x90 && cmd !== 0x80) return;
+  initAudio();
+  const oct = Math.floor(note / 12) - 1;
+  const noteName = NOTE_NAMES[note % 12];
+  if (cmd === 0x90 && vel > 0) startNote(noteName, oct);
+  else stopNote(noteName, oct);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildGrille();
+buildBellows();
+buildKeyboard();
+buildHelp();
+initMIDI();
+
+// Rebuild keyboard on resize
+window.addEventListener('resize', () => { buildKeyboard(); });
+
+// Bellows animation loop (for visual effect)
+setInterval(() => {
+  const bars = document.querySelectorAll('.bellows-bar');
+  const isPlaying = Object.keys(activeNotes).length > 0 || droneActive;
+  if (isPlaying) {
+    bars.forEach((bar, i) => {
+      bar.style.transform = `scaleY(${0.4 + 0.6 * Math.abs(Math.sin(Date.now() / 150 + i * 0.8))})`;
+    });
+  } else {
+    bars.forEach(bar => { bar.style.transform = ''; bar.classList.remove('active'); });
+  }
+}, 60);
+</script>
+</body>
+</html>
